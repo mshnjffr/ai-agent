@@ -78,6 +78,20 @@ You: what files are in this directory?
 | `agent.py` | The `Agent` class — the tool-use loop. Reusable, no config/CLI concerns. |
 | `tools.py` | The `Tool` type and the tool implementations. |
 
+## See what's happening behind the scenes (the log)
+
+The console only shows the conversation. To actually watch the API cycle, the
+step branches write a detailed log to `agent.log`:
+
+```bash
+tail -f agent.log
+```
+
+Each turn logs the tool schemas sent, the full API request, the raw response
+(plain reply vs. `tool_call`), the loop's decision, and every tool execution +
+result - so you can see exactly why the agent does what it does. Override the
+path with `AGENT_LOG=/some/path.log`.
+
 ## How tool calling works (the one idea)
 
 You tell the model what tools exist. When it wants one, it doesn't run it — it
