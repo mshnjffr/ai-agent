@@ -1,32 +1,20 @@
-"""Step 2 - A second tool: list_files.
+"""The Agent - an LLM, its tools, and the loop that connects them.
 
-The loop doesn't change at all - we just add another tool in tools.py and pass
-it in. The interesting part is what the model does with it: given read_file AND
-list_files, it will chain them on its own (e.g. list the directory, then read
-the files it finds) without us scripting that behaviour.
+This is the reusable core. It deliberately knows nothing about how it was
+configured: no environment variables, no argument parsing, no client creation.
+You hand it a ready-to-use client, a model name, and a list of tools, and it
+runs the conversation. main.py is responsible for wiring those pieces together.
 
-Note there's no fixed format for a tool's output. list_files returns JSON with a
-trailing "/" on directories simply because it's easy for the model to parse.
-Picking good tool output is an experiment, not a rule.
-
-This step ships two tools: read_file and list_files (both in tools.py).
-
-Run it:
-    python agent.py
+Keeping the class in its own module (separate from the entry point) follows the
+single-responsibility principle: agent.py owns the agent loop, main.py owns
+startup/config, tools.py owns the tools.
 """
 
 import json
-import os
-import sys
 
-from dotenv import load_dotenv
 from openai import OpenAI
 
-from tools import LIST_FILES, READ_FILE, Tool
-
-load_dotenv()
-
-MODEL = os.getenv("MODEL", "anthropic/claude-sonnet-4.5")
+from tools import Tool
 
 BLUE = "\033[94m"
 YELLOW = "\033[93m"
@@ -107,18 +95,3 @@ class Agent:
             "tool_call_id": call.id,
             "content": content,
         }
-
-
-def main() -> None:
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if not api_key:
-        sys.exit("Set OPENROUTER_API_KEY in your environment or .env file.")
-
-    client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
-
-    tools = [READ_FILE, LIST_FILES]
-    Agent(client, MODEL, tools).run()
-
-
-if __name__ == "__main__":
-    main()
