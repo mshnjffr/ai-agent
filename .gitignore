@@ -1,0 +1,22 @@
+# Environment
+.env
+.envrc
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Files the agent might create while you play with it
+fizzbuzz.js
+congrats.js
+secret-file.txt
+playground/
