@@ -50,16 +50,33 @@ cp .env.example .env
 
 ## Run
 
+On `main` (the single-file chat loop):
+
 ```bash
 python agent.py
 ```
 
-Then just talk to it:
+On the step branches, the code is split into modules and you run the entry
+point instead:
+
+```bash
+python main.py
+```
+
+Either way, just talk to it:
 
 ```
 Chat with the agent (use 'ctrl-c' to quit)
 You: what files are in this directory?
 ```
+
+## File layout (on the step branches)
+
+| File | Responsibility |
+| --- | --- |
+| `main.py`  | Entry point: load config, build the OpenRouter client, pick tools, run. |
+| `agent.py` | The `Agent` class — the tool-use loop. Reusable, no config/CLI concerns. |
+| `tools.py` | The `Tool` type and the tool implementations. |
 
 ## How tool calling works (the one idea)
 
