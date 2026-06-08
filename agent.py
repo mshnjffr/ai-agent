@@ -1,17 +1,15 @@
-"""Step 2 - The agent.
+"""Step 3 - A second tool: list_files.
 
-We add two things to the chat loop from step 1:
+The loop doesn't change at all - we just add another tool to the registry. The
+interesting part is what the model does with it: given read_file AND list_files,
+it will chain them on its own (e.g. list the directory, then read the files it
+finds) without us scripting that behaviour.
 
-  1. Tools. A tool is just: a name, a description, a JSON schema for its
-     inputs, and a function that runs it. We tell the model which tools exist.
-  2. The agentic loop. When the model wants a tool, it doesn't run it - it
-     replies with a `tool_call` asking US to. We run the function, send the
-     result back, and ask the model again. We keep looping until the model
-     stops asking for tools and just talks to the user.
+Note there's no fixed format for a tool's output. list_files returns JSON with a
+trailing "/" on directories simply because it's easy for the model to parse.
+Picking good tool output is an experiment, not a rule.
 
-That second point is the whole idea of an agent. Everything else is decoration.
-
-This step ships one tool: read_file.
+This step ships two tools: read_file and list_files.
 
 Run it:
     python agent.py
@@ -80,6 +78,42 @@ READ_FILE = Tool(
         "required": ["path"],
     },
     function=read_file,
+)
+
+
+def list_files(args: dict) -> str:
+    """List files and directories under a path, recursively."""
+    root = args.get("path") or "."
+    entries: list[str] = []
+    for current, dirs, files in os.walk(root):
+        for d in dirs:
+            rel = os.path.relpath(os.path.join(current, d), root)
+            entries.append(rel + "/")
+        for f in files:
+            rel = os.path.relpath(os.path.join(current, f), root)
+            entries.append(rel)
+    return json.dumps(sorted(entries))
+
+
+LIST_FILES = Tool(
+    name="list_files",
+    description=(
+        "List files and directories at a given path. If no path is provided, "
+        "lists files in the current directory."
+    ),
+    input_schema={
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string",
+                "description": (
+                    "Optional relative path to list files from. Defaults to the "
+                    "current directory if not provided."
+                ),
+            },
+        },
+    },
+    function=list_files,
 )
 
 
@@ -168,7 +202,7 @@ def main() -> None:
 
     client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
 
-    tools = [READ_FILE]
+    tools = [READ_FILE, LIST_FILES]
     Agent(client, MODEL, tools).run()
 
 
