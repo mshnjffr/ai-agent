@@ -1,4 +1,4 @@
-"""Step 3 - A second tool: list_files.
+"""Step 2 - A second tool: list_files.
 
 The loop doesn't change at all - we just add another tool to the registry. The
 interesting part is what the model does with it: given read_file AND list_files,
