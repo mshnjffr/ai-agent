@@ -1,6 +1,6 @@
-"""Step 2 - The agent.
+"""Step 1 - The agent.
 
-We add two things to the chat loop from step 1:
+We add two things to the bare chat loop on `main`:
 
   1. Tools. A tool is just: a name, a description, a JSON schema for its
      inputs, and a function that runs it. We tell the model which tools exist.
@@ -11,7 +11,8 @@ We add two things to the chat loop from step 1:
 
 That second point is the whole idea of an agent. Everything else is decoration.
 
-This step ships one tool: read_file.
+This step ships one tool: read_file. (On `main` you saw the chat loop with no
+tools at all - start there if you haven't.)
 
 Run it:
     python agent.py
