@@ -11,8 +11,8 @@ We add two things to the bare chat loop on `main`:
 
 That second point is the whole idea of an agent. Everything else is decoration.
 
-This step ships one tool: read_file. (On `main` you saw the chat loop with no
-tools at all - start there if you haven't.)
+This step ships one tool: read_file (defined in tools.py). On `main` you saw the
+chat loop with no tools at all - start there if you haven't.
 
 Run it:
     python agent.py
@@ -21,11 +21,11 @@ Run it:
 import json
 import os
 import sys
-from dataclasses import dataclass
-from typing import Callable
 
 from dotenv import load_dotenv
 from openai import OpenAI
+
+from tools import READ_FILE, Tool
 
 load_dotenv()
 
@@ -35,56 +35,6 @@ BLUE = "\033[94m"
 YELLOW = "\033[93m"
 GREEN = "\033[92m"
 RESET = "\033[0m"
-
-
-# --- Tools --------------------------------------------------------------------
-
-
-@dataclass
-class Tool:
-    name: str
-    description: str
-    input_schema: dict
-    function: Callable[[dict], str]
-
-    def to_openai(self) -> dict:
-        return {
-            "type": "function",
-            "function": {
-                "name": self.name,
-                "description": self.description,
-                "parameters": self.input_schema,
-            },
-        }
-
-
-def read_file(args: dict) -> str:
-    """Read the contents of a relative file path."""
-    with open(args["path"], "r", encoding="utf-8") as f:
-        return f.read()
-
-
-READ_FILE = Tool(
-    name="read_file",
-    description=(
-        "Read the contents of a given relative file path. Use this when you "
-        "want to see what's inside a file. Do not use this with directory names."
-    ),
-    input_schema={
-        "type": "object",
-        "properties": {
-            "path": {
-                "type": "string",
-                "description": "The relative path of a file in the working directory.",
-            },
-        },
-        "required": ["path"],
-    },
-    function=read_file,
-)
-
-
-# --- Agent --------------------------------------------------------------------
 
 
 class Agent:
