@@ -15,6 +15,9 @@ env/
 .idea/
 .vscode/
 
+# Agent log file
+*.log
+
 # Files the agent might create while you play with it
 fizzbuzz.js
 congrats.js
