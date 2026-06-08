@@ -1,33 +1,20 @@
-"""Step 3 - The tool that closes the loop: edit_file.
+"""The Agent - an LLM, its tools, and the loop that connects them.
 
-read_file and list_files let the agent observe. edit_file lets it ACT - to
-change something outside the model's context window, which is the actual
-definition of an agent.
+This is the reusable core. It deliberately knows nothing about how it was
+configured: no environment variables, no argument parsing, no client creation.
+You hand it a ready-to-use client, a model name, and a list of tools, and it
+runs the conversation. main.py is responsible for wiring those pieces together.
 
-The implementation (in tools.py) is deliberately dumb: replace an exact
-substring (old_str) with new_str. If old_str is empty and the file doesn't
-exist, we create it. Plain string replacement is enough for the model to write
-and rewrite real code.
-
-This step ships three tools: read_file, list_files, edit_file (all in tools.py).
-That's the whole inner loop of a code-editing agent.
-
-Run it:
-    python agent.py
+Keeping the class in its own module (separate from the entry point) follows the
+single-responsibility principle: agent.py owns the agent loop, main.py owns
+startup/config, tools.py owns the tools.
 """
 
 import json
-import os
-import sys
 
-from dotenv import load_dotenv
 from openai import OpenAI
 
-from tools import EDIT_FILE, LIST_FILES, READ_FILE, Tool
-
-load_dotenv()
-
-MODEL = os.getenv("MODEL", "anthropic/claude-sonnet-4.5")
+from tools import Tool
 
 BLUE = "\033[94m"
 YELLOW = "\033[93m"
@@ -108,18 +95,3 @@ class Agent:
             "tool_call_id": call.id,
             "content": content,
         }
-
-
-def main() -> None:
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if not api_key:
-        sys.exit("Set OPENROUTER_API_KEY in your environment or .env file.")
-
-    client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
-
-    tools = [READ_FILE, LIST_FILES, EDIT_FILE]
-    Agent(client, MODEL, tools).run()
-
-
-if __name__ == "__main__":
-    main()
