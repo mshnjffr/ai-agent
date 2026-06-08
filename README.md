@@ -24,18 +24,18 @@ them in order, or `git diff` between them to see exactly what each step adds.
 | Branch | What it adds |
 | --- | --- |
 | `main` (start)      | The bare chat loop: talk to a model in your terminal. Not an agent yet. |
-| `step-2-read-file`  | The tool-use loop + the first tool, `read_file`. **Now it's an agent.** |
-| `step-3-list-files` | A `list_files` tool. Watch it chain tools on its own. |
-| `step-4-edit-file`  | An `edit_file` tool (string replace + file creation). It can now write code. |
+| `step-1-read-file`  | The tool-use loop + the first tool, `read_file`. **Now it's an agent.** |
+| `step-2-list-files` | A `list_files` tool. Watch it chain tools on its own. |
+| `step-3-edit-file`  | An `edit_file` tool (string replace + file creation). It can now write code. |
 
 **`main` is the starting point** - just the project scaffold and the bare chat
-loop (same as `step-1-chat-loop`). From here you build forward through the step
-branches. The final, complete agent lives on `step-4-edit-file`.
+loop. From here you build forward through the step branches. The final, complete
+agent lives on `step-3-edit-file`.
 
 ```bash
 git log --oneline --all --graph   # see the whole story
-git checkout step-2-read-file     # the first real agent
-git checkout step-4-edit-file     # the finished agent
+git checkout step-1-read-file     # the first real agent
+git checkout step-3-edit-file     # the finished agent
 ```
 
 ## Setup
