@@ -1,35 +1,20 @@
-"""Step 1 - The agent.
+"""The Agent - an LLM, its tools, and the loop that connects them.
 
-We add two things to the bare chat loop on `main`:
+This is the reusable core. It deliberately knows nothing about how it was
+configured: no environment variables, no argument parsing, no client creation.
+You hand it a ready-to-use client, a model name, and a list of tools, and it
+runs the conversation. main.py is responsible for wiring those pieces together.
 
-  1. Tools. A tool is just: a name, a description, a JSON schema for its
-     inputs, and a function that runs it. We tell the model which tools exist.
-  2. The agentic loop. When the model wants a tool, it doesn't run it - it
-     replies with a `tool_call` asking US to. We run the function, send the
-     result back, and ask the model again. We keep looping until the model
-     stops asking for tools and just talks to the user.
-
-That second point is the whole idea of an agent. Everything else is decoration.
-
-This step ships one tool: read_file (defined in tools.py). On `main` you saw the
-chat loop with no tools at all - start there if you haven't.
-
-Run it:
-    python agent.py
+Keeping the class in its own module (separate from the entry point) follows the
+single-responsibility principle: agent.py owns the agent loop, main.py owns
+startup/config, tools.py owns the tools.
 """
 
 import json
-import os
-import sys
 
-from dotenv import load_dotenv
 from openai import OpenAI
 
-from tools import READ_FILE, Tool
-
-load_dotenv()
-
-MODEL = os.getenv("MODEL", "anthropic/claude-sonnet-4.5")
+from tools import Tool
 
 BLUE = "\033[94m"
 YELLOW = "\033[93m"
@@ -110,18 +95,3 @@ class Agent:
             "tool_call_id": call.id,
             "content": content,
         }
-
-
-def main() -> None:
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if not api_key:
-        sys.exit("Set OPENROUTER_API_KEY in your environment or .env file.")
-
-    client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
-
-    tools = [READ_FILE]
-    Agent(client, MODEL, tools).run()
-
-
-if __name__ == "__main__":
-    main()
