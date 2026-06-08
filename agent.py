@@ -1,15 +1,15 @@
-"""Step 3 - A second tool: list_files.
+"""Step 4 - The tool that closes the loop: edit_file.
 
-The loop doesn't change at all - we just add another tool to the registry. The
-interesting part is what the model does with it: given read_file AND list_files,
-it will chain them on its own (e.g. list the directory, then read the files it
-finds) without us scripting that behaviour.
+read_file and list_files let the agent observe. edit_file lets it ACT - to
+change something outside the model's context window, which is the actual
+definition of an agent.
 
-Note there's no fixed format for a tool's output. list_files returns JSON with a
-trailing "/" on directories simply because it's easy for the model to parse.
-Picking good tool output is an experiment, not a rule.
+The implementation is deliberately dumb: replace an exact substring (old_str)
+with new_str. If old_str is empty and the file doesn't exist, we create it.
+Plain string replacement is enough for the model to write and rewrite real code.
 
-This step ships two tools: read_file and list_files.
+This step ships three tools: read_file, list_files, edit_file. That's the whole
+inner loop of a code-editing agent.
 
 Run it:
     python agent.py
@@ -117,6 +117,71 @@ LIST_FILES = Tool(
 )
 
 
+def edit_file(args: dict) -> str:
+    """Replace old_str with new_str in a file, creating it if needed."""
+    path = args.get("path")
+    old_str = args.get("old_str", "")
+    new_str = args.get("new_str", "")
+
+    if not path or old_str == new_str:
+        raise ValueError("invalid input: need a path and old_str != new_str")
+
+    if not os.path.exists(path):
+        if old_str == "":
+            parent = os.path.dirname(path)
+            if parent:
+                os.makedirs(parent, exist_ok=True)
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(new_str)
+            return f"Successfully created file {path}"
+        raise FileNotFoundError(path)
+
+    with open(path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    if old_str not in content:
+        raise ValueError("old_str not found in file")
+
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content.replace(old_str, new_str))
+
+    return "OK"
+
+
+EDIT_FILE = Tool(
+    name="edit_file",
+    description=(
+        "Make edits to a text file.\n\n"
+        "Replaces 'old_str' with 'new_str' in the given file. 'old_str' and "
+        "'new_str' MUST be different from each other.\n\n"
+        "If the file specified with path doesn't exist, it will be created "
+        "(pass an empty 'old_str')."
+    ),
+    input_schema={
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string",
+                "description": "The path to the file.",
+            },
+            "old_str": {
+                "type": "string",
+                "description": (
+                    "Text to search for - must match exactly and must have "
+                    "exactly one match. Leave empty to create a new file."
+                ),
+            },
+            "new_str": {
+                "type": "string",
+                "description": "Text to replace old_str with.",
+            },
+        },
+        "required": ["path", "new_str"],
+    },
+    function=edit_file,
+)
+
+
 # --- Agent --------------------------------------------------------------------
 
 
@@ -202,7 +267,7 @@ def main() -> None:
 
     client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
 
-    tools = [READ_FILE, LIST_FILES]
+    tools = [READ_FILE, LIST_FILES, EDIT_FILE]
     Agent(client, MODEL, tools).run()
 
 
