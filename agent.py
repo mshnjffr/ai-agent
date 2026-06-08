@@ -1,4 +1,4 @@
-"""Step 4 - The tool that closes the loop: edit_file.
+"""Step 3 - The tool that closes the loop: edit_file.
 
 read_file and list_files let the agent observe. edit_file lets it ACT - to
 change something outside the model's context window, which is the actual
